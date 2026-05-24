@@ -6,6 +6,9 @@ import { food_items } from '../food'
 import { dataContext } from '../context/UserContext'
 import { useContext } from 'react'
 import { RxCross2 } from "react-icons/rx";
+import Card2 from '../components/Card2'
+import { useSelector } from 'react-redux'
+import {toast} from "react-hot-toast";
 function Home() {
     let {Cate,setCate,input,showCart,setShowCart}=useContext(dataContext)
   function filter(category) {
@@ -18,6 +21,11 @@ function Home() {
       setCate(newList)
     }
   }
+  let items=useSelector(state=>state.cart)
+  let subtotal=items.reduce((total,item)=>total+item.qty*item.price,0)
+  let deliveryFee=20
+  let taxes=subtotal*0.5/100 
+  let total=Math.floor(subtotal+deliveryFee+taxes)
   return (
     <div className='bg-slate-200 w-full min-h-screen'>
       <Nav />
@@ -34,7 +42,8 @@ function Home() {
         ))}
         </div>:null}
       <div className='w-full flex flex-wrap gap-5 px-5 justify-center items-center pt-8 pb-8'>
-        {Cate.map((items) => (
+        {Cate.length>1?
+        Cate.map((items) => (
           <Card
             key={items.id}
             name={items.food_name}
@@ -43,13 +52,42 @@ function Home() {
             price={items.price}
             type={items.food_type}
           />
-        ))}
+        )):<div className='text-center text-xl text-green-500 font-semibold pt-5'>No Dish Found</div>}
       </div>
-      <div className={`w-[40vw] h-[100%] fixed top-0 right-0 bg-white shadow-xl p-6 transition-all duration-500 ${showCart?"translate-x-0":"translate-x-full"}`}>
+      <div className={`w-full md:w-[40vw] h-[100%] fixed top-0 right-0 bg-white shadow-xl p-6 transition-all duration-500 flex flex-col items-center overflow-auto ${showCart? "translate-x-0" : "translate-x-full"}`}>
       <header className='w-[100%] flex justify-between items-center'>
         <span className=' text-green-400 text-[18px]'>Order Items</span>
         <RxCross2 onClick={()=>setShowCart(false)} className='w-[30px] h-[20px] text-green-400 text-[18px] font-semibold cursor-pointer hover:text-gray-600'/>
       </header>
+      {items.length>0?
+      <>
+      <div className='w-full mt-9 flex flex-col gap-8'>
+        {items.map((item)=>(
+          <Card2 name={item.name} price={item.price} image={item.image} id={item.id} qty={item.qty}/>
+        ))}
+      </div>
+      <div className='w-full border-t-2 border-b-2 border-gray-400 mt-7 flex flex-col gap-2 p-8'>
+        <div className='w-full flex justify-between items-center'>
+          <span className='text-lg text-gray-600 font-semibold'>Subtotal</span>
+          <span className='text-green-400 font-semibold text-lg'>Rs {subtotal}</span>
+        </div>
+        <div className='w-full flex justify-between items-center'>
+          <span className='text-lg text-gray-600 font-semibold'>Delivery Fee</span>
+          <span className='text-green-400 font-semibold text-lg'>Rs {deliveryFee}</span>
+        </div>
+        <div className='w-full flex justify-between items-center'>
+          <span className='text-lg text-gray-600 font-semibold'>Taxes</span>
+          <span className='text-green-400 font-semibold text-lg'>Rs {taxes}</span>
+        </div>
+      </div>
+      <div className='w-full'> 
+        <div className='w-full flex justify-between items-center p-9'>
+          <span className='text-2xl text-gray-600 font-semibold'>Total</span>
+          <span className='text-green-400 font-semibold text-lg'>Rs {total}</span>
+        </div>
+      </div>
+      <button onClick={()=>{toast.success("Order Placed")}} className='w-[80%] p-3 rounded-lg bg-green-500 text-white hover:bg-green-400 transition-all cursor-pointer'>Place Order</button>
+      </>:<div className='text-center text-xl text-green-500 font-semibold pt-5'>Empty Cart</div>}
       </div>
     </div>
     )
